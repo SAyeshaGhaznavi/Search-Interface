@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import { useQuery, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { debounce } from 'lodash';
 import { TECHNOLOGIES } from './lib/data';
@@ -14,8 +14,11 @@ export default function Home() {
   const [query, setQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [isFocused, setIsFocused] = useState(false);
-  const [errorInCode, setErrorInCode] = useState(false);
   const [tagSet, setTagSet] = useState(false);
+  const [focusedTagIndex, setFocusedTagIndex] = useState<number | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const tagRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const [searchInput, setSearchInput]=useState<boolean | false>(false);
 
 
   const {
@@ -41,7 +44,18 @@ export default function Home() {
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    if (value.length > 100 || /[^a-zA-Z0-9\s]/.test(value)) return;
+    if (value.length > 100 || /[^a-zA-Z0-9\s]/.test(value)) {
+      setSearchInput(false);
+      return;
+    }
+    else if(value.length<2)
+    {
+      setSearchInput(false);
+    }
+    else if(value.length<100&&value.length>1)
+    {
+      setSearchInput(true);
+    }
     debouncedSetQuery(value);
   }, [debouncedSetQuery]);
 
@@ -54,23 +68,14 @@ export default function Home() {
 
 
   const toggleTag = (tag: string) => {
-    console.log(selectedTag, "----" ,tag);
-    console.log("checking: ",selectedTag===tag);
     if (selectedTag === tag) {
-      console.log("selected tag in off before: ", selectedTag);
       setSelectedTag(null);
       setTagSet(false);
-      console.log("selected tag in off after: ", selectedTag);
-      console.log("tag set on off: ",tagSet);
     }
     else {
-      console.log("selected tag in off before: ", selectedTag);
       setSelectedTag(tag);
       setTagSet(true);
       handleTagChange(tag);
-      console.log("selected tag in on after: ", selectedTag);
-      console.log("tag set on on: ",tagSet);
-      //console.log("Results in toggle: ", results);
     }
   };
 
@@ -88,12 +93,14 @@ export default function Home() {
             <>
               <MagnifyingGlassIcon className="w-5 h-5 text-gray-500" />
               <input
+                ref={searchInputRef}
                 type="text"
                 placeholder="Search what technologies we are using at..."
                 className="flex-1 bg-transparent outline-none text-gray-800 placeholder-gray-500"
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
                 onChange={handleInputChange}
+                //onKeyDown={handleKeyDown}
               />
             </>
           ) : (
@@ -103,17 +110,23 @@ export default function Home() {
 
         {/* Tags */}
         <div className="flex flex-wrap gap-3 mt-4">
-          {TAGS.map((tag) => {
+          {TAGS.map((tag, i) => {
             const isSelected = selectedTag === tag;
+            const isFocused = focusedTagIndex === i;
+            //setTagSet(!(selectedTag === tag));
             return (
               <button
                 key={tag}
-                onClick={() => {toggleTag(tag);}}
-                className={`flex items-center gap-2 px-4 py-1 rounded-full border text-sm font-medium transition ${
-                  isSelected
-                    ? 'bg-[#6833FF] text-white'
-                    : 'bg-white hover:bg-violet-500 text-purple-600 hover:text-white border-purple-300'
-                }`}
+                ref={el => { tagRefs.current[i] = el; }}
+                onFocus={() => setFocusedTagIndex(i)}
+                onBlur={() => setFocusedTagIndex(null)}
+                onClick={() => toggleTag(tag)}
+                tabIndex={0}
+                className={`flex items-center gap-2 px-4 py-1 rounded-full border text-sm font-medium transition outline-none
+                  ${isSelected ? 'bg-[#6833FF] text-white' : ''}
+                  ${isFocused && !isSelected ? 'bg-violet-500 text-white' : ''}
+                  ${!isSelected && !isFocused ? 'bg-white hover:bg-violet-500 text-purple-600 hover:text-white border-purple-300' : ''}
+                `}
               >
                 <TagIcon className="w-4 h-4" />
                 {tag}
@@ -122,33 +135,10 @@ export default function Home() {
           })}
         </div>
 
-        {/*Search by Tag*/}
-         {tagSet && (
-           <div className="grid gap-4">
-               {results.map((tech:any) => (
-                 <div key={tech.title} className="p-4 rounded-xl bg-white hover:bg-[#F2F4F8]">
-                   <a
-                     href={tech.url}
-                     target="_blank"
-                     rel="noopener noreferrer"
-                     className="flex items-center gap-4"
-                   >
-                   <div className="flex items-center gap-4">
-                     <img src={tech.image} alt={tech.title} className="w-12 h-12 rounded" />
-                     <div>
-                       <h3 className="font-semibold">{tech.title}</h3>
-                       <p className="text-sm text-gray-500">{tech.description}</p>
-                     </div>
-                   </div>
-                   </a>
-                 </div>
-               ))}
-             </div>
-         )}
 
          {/* Illustration */}
          
-        {!tagSet && (!query || results.length===0 &&! isLoading || query.trim().length < 2 || /[^a-zA-Z0-9\s]/.test(query)) && (
+        {tagSet&&(!query || results.length===0 &&! isLoading || query.trim().length < 2 || /[^a-zA-Z0-9\s]/.test(query)) && (
           <div className="flex justify-center items-center h-full mt-6">
             <Image
               src="/searching.svg"
@@ -164,7 +154,6 @@ export default function Home() {
 
         {/* Results Section */}
         <div className="mt-6">
-          {/* <hr className="border-t border-gray-300 w-full mb-4" /> */}
           {isLoading ? (
             <div className="flex justify-center items-center h-full mt-6">
             <Image
@@ -188,7 +177,7 @@ export default function Home() {
               priority
             />
           </div>
-          )  : (
+          )  : tagSet||query&&(searchInput)? (
             <div className="grid gap-4">
               {results.map((tech:any) => (
                 <div key={tech.title} className="p-4 rounded-xl bg-white hover:bg-[#F2F4F8]">
@@ -198,17 +187,28 @@ export default function Home() {
                     rel="noopener noreferrer"
                     className="flex items-center gap-4"
                   >
-                  <div className="flex items-center gap-4">
-                    <img src={tech.image} alt={tech.title} className="w-12 h-12 rounded" />
-                    <div>
-                      <h3 className="font-semibold">{tech.title}</h3>
-                      <p className="text-sm text-gray-500">{tech.description}</p>
+                    <div className="flex items-center gap-4">
+                      <img src={tech.image} alt={tech.title} className="w-12 h-12 rounded" />
+                      <div>
+                        <h3 className="font-semibold">{tech.title}</h3>
+                        <p className="text-sm text-gray-500">{tech.description}</p>
+                      </div>
                     </div>
-                  </div>
                   </a>
                 </div>
               ))}
             </div>
+          ) : (
+            <div className="flex justify-center items-center h-full mt-6">
+            <Image
+              src="/searching.svg"
+              alt="Searching Illustration"
+              width={400}
+              height={460}
+              className="max-w-full h-auto"
+              priority
+            />
+          </div>
           )}
         </div>
 
@@ -218,7 +218,7 @@ export default function Home() {
           <div>
             {isError?  (
               <p className="text-red-400">Something wrong happened but this is not your fault</p>
-            ) : results.length === 0 || results === null ? (
+            ) : (results.length === 0 || results === null) || !tagSet && !(searchInput) ? (
               <p className="text-gray-400">No Results</p>
             ) : (
               <p className="text-gray-400">{results.length} Results</p>
