@@ -29,7 +29,9 @@ export async function searchTechnologies(query: string, category?: string) {
   console.log("Api: ", url);
 
   try {
+    console.log("fetching...");
     const res = await fetch(url);
+    console.log("fetched!", res);
 
     if (!res.ok) {
       throw new Error(`API error: ${res.status}`);
@@ -37,10 +39,9 @@ export async function searchTechnologies(query: string, category?: string) {
 
     const data = await res.json();
 
-    // Optional filtering by category (if needed)
-    if (category) {
-      return data.filter((item: any) => item.category === category);
-    }
+    // if (category) {
+    //   return data.filter((item: any) => item.category === category);
+    // }
 
     console.log('Results:', data);
     return data;

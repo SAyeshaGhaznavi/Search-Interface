@@ -48,22 +48,30 @@ export default function Home() {
   const handleTagChange = useCallback((val: string) => {
     const value = val.trim();
     if (value.length > 100 || /[^a-zA-Z0-9\s]/.test(value)) return;
-    setSelectedTag(value);    
+    //setSelectedTag(value); 
     debouncedSetQuery(value); 
   }, [debouncedSetQuery]);
 
 
   const toggleTag = (tag: string) => {
+    console.log(selectedTag, "----" ,tag);
+    console.log("checking: ",selectedTag===tag);
     if (selectedTag === tag) {
+      console.log("selected tag in off before: ", selectedTag);
       setSelectedTag(null);
       setTagSet(false);
-    } else {
+      console.log("selected tag in off after: ", selectedTag);
+      console.log("tag set on off: ",tagSet);
+    }
+    else {
+      console.log("selected tag in off before: ", selectedTag);
       setSelectedTag(tag);
       setTagSet(true);
       handleTagChange(tag);
-      console.log("Results: ", results);
+      console.log("selected tag in on after: ", selectedTag);
+      console.log("tag set on on: ",tagSet);
+      //console.log("Results in toggle: ", results);
     }
-
   };
 
   return (
@@ -100,16 +108,7 @@ export default function Home() {
             return (
               <button
                 key={tag}
-                onClick={() => {
-                  if (selectedTag === tag) {
-                    setSelectedTag(null);
-                    
-                    //debouncedSetQuery('');
-                  } else {
-                    handleTagChange(tag);
-                    //handleTagChange(tag);
-                  }
-                }}
+                onClick={() => {toggleTag(tag);}}
                 className={`flex items-center gap-2 px-4 py-1 rounded-full border text-sm font-medium transition ${
                   isSelected
                     ? 'bg-[#6833FF] text-white'
@@ -149,7 +148,7 @@ export default function Home() {
 
          {/* Illustration */}
          
-        {!tagSet&&(!query || results.length===0 &&! isLoading || query.trim().length < 2 || /[^a-zA-Z0-9\s]/.test(query)) && (
+        {!tagSet && (!query || results.length===0 &&! isLoading || query.trim().length < 2 || /[^a-zA-Z0-9\s]/.test(query)) && (
           <div className="flex justify-center items-center h-full mt-6">
             <Image
               src="/searching.svg"
