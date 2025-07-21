@@ -212,12 +212,12 @@ export default function Home() {
 
          {/* Illustration */}
         {selectedTag&&(!query || results.length===0 &&! isLoading || query.trim().length < 2 || /[^a-zA-Z0-9\s]/.test(query)) && (
-          <div className="flex justify-center items-center h-full mt-6">
+            <div className="flex justify-center items-center flex justify-center items-center h-[414px] w-[642px]">
             <Image
               src="/searching.svg"
               alt="Searching Illustration"
-              width={400}
-              height={460}
+              width={247}
+              height={200}
               className="max-w-full h-auto"
               priority
             />
@@ -228,35 +228,35 @@ export default function Home() {
         {/* Results Section */}
         <div className="mt-6">
           {isLoading ? (
-            <div className="flex justify-center items-center h-full mt-6">
+            <div className="flex justify-center items-center flex justify-center items-center h-[406px] w-[642px]">
             <Image
               src="/loading.svg"
               alt="Loading Illustration"
-              width={100}
-              height={100}
+              width={40}
+              height={40}
               className="animate-spin"
               priority
             />
           </div>
             
           ) : isError ? (
-            <div className="flex justify-center items-center h-full mt-6">
+            <div className="flex justify-center items-center flex justify-center items-center h-[406px] w-[642px]">
             <Image
               src="/errorImage.svg"
               alt="Error Illustration"
-              width={400}
-              height={460}
+              width={247}
+              height={200}
               className="max-w-full h-auto"
               priority
             />
           </div>
           ) : results.length==0&&query? (
-            <div className="flex justify-center items-center h-full mt-6">
+            <div className="flex justify-center items-center flex justify-center items-center h-[406px] w-[642px]">
             <Image
               src="/errorImage.svg"
               alt="Error Illustration"
-              width={400}
-              height={460}
+              width={247}
+              height={200}
               className="max-w-full h-auto"
               priority
             />
@@ -270,12 +270,12 @@ export default function Home() {
               </button>
             </div>
           ) : (
-            <div className="flex justify-center items-center h-full mt-6">
+            <div className="flex justify-center items-center flex justify-center items-center h-[414px] w-[642px]">
             <Image
               src="/searching.svg"
               alt="Searching Illustration"
-              width={400}
-              height={460}
+              width={247}
+              height={200}
               className="max-w-full h-auto"
               priority
             />

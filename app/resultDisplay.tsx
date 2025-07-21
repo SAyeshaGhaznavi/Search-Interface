@@ -17,7 +17,7 @@ export default function resultDisplay(results:any)
     return(
         <div className="grid gap-4">
               {results.map((tech:any) => (
-                <div key={tech.title} className="p-4 rounded-xl bg-white hover:bg-[#F2F4F8]">
+                <div key={tech.title} className="p-4 rounded-xl bg-white hover:bg-[#F2F4F8] h-[100px] w-[642px] px-[20px] py-[12px] gap-[20px]">
                   <a
                     href={tech.url}
                     target="_blank"
@@ -25,10 +25,10 @@ export default function resultDisplay(results:any)
                     className="flex items-center gap-4"
                   >
                     <div className="flex items-center justify-between gap-4">
-                      <img src={tech.image} alt={tech.title} className="w-12 h-12 rounded" />
+                      <img src={tech.image} alt={tech.title} className="w-[76px] h-[76px]" />
                       <div className=''>
-                        <h3 className="font-semibold">{tech.title}</h3>
-                        <p className="text-sm text-gray-500 max-w-90">{tech.description}</p>
+                        <p className="font-poppins text-black font-[500] text-[20px] leading-[26px] text-line-height-[26px]">{tech.title}</p>
+                        <p className="font-poppins text-[#999FAA] font-[400] text-[16px] leading-[20px] max-w-90 items-center justify-center">{tech.description}</p>
                       </div>
                       <div className='absolute right-100'>
                         <button onClick={() => handleSingleDownload(tech)}>

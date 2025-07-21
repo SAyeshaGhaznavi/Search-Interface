@@ -33,10 +33,10 @@ export default function TagSelector({
             onBlur={onBlur}
             onClick={() => onTagClick(tag)}
             tabIndex={0}
-            className={`flex items-center gap-2 px-4 py-1 h-[32px] w-[145px] rounded-full border text-sm font-medium transition outline-none
+            className={`flex items-center gap-[8px] px-[16px] py-[6px] h-[32px] w-[145px] rounded-full border text-sm font-medium items-center justify-center transition outline-none
               ${isSelected ? 'bg-[#6833FF] text-white' : ''}
-              ${isFocused && !isSelected ? 'bg-violet-500 text-white' : ''}
-              ${!isSelected && !isFocused ? 'bg-white hover:bg-violet-500 text-purple-600 hover:text-white border-purple-300' : ''}
+              ${isFocused && !isSelected ? 'bg-[#865CFF] text-white' : ''}
+              ${!isSelected && !isFocused ? 'bg-[#F2F4F8] hover:bg-violet-500 text-[#865CFF] hover:text-[#F2F4F8] border-[#F2F4F8]' : ''}
             `}
           >
             <TagIcon className="w-4 h-4" />
