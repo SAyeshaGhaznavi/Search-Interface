@@ -6,7 +6,8 @@ import { debounce } from 'lodash';
 import { searchTechnologies } from './lib/api';
 import { useSearchHistory } from './lib/hook';
 import Image from 'next/image';
-import { MagnifyingGlassIcon, TagIcon } from '@heroicons/react/24/solid';
+import { MagnifyingGlassIcon, TagIcon, ArrowDownTrayIcon } from '@heroicons/react/24/solid';
+import { jsPDF } from 'jspdf';
 
 const TAGS = ['Languages', 'Build', 'Design', 'Cloud'];
 
@@ -21,8 +22,6 @@ export default function Home() {
   const [searchInput, setSearchInput]=useState<boolean | false>(false);
   const { searchHistory, addToSearchHistory } = useSearchHistory();
   const [showHistoryDropdown, setShowHistoryDropdown] = useState(false);
-
-
 
   const {
     data: results = [],
@@ -91,15 +90,16 @@ export default function Home() {
     debouncedSetQuery(value); 
   }, [debouncedSetQuery]);
 
-
   const toggleTag = (tag: string) => {
     if (selectedTag === tag) {
       setSelectedTag(null);
       setTagSet(false);
+      setQuery('');
     }
     else {
       setSelectedTag(tag);
       setTagSet(true);
+      setQuery('');
       handleTagChange(tag);
     }
   };
@@ -124,6 +124,35 @@ export default function Home() {
     setShowHistoryDropdown(false);
     searchInputRef.current?.blur();
   };
+
+  const handleDownload = () => {
+    const doc = new jsPDF();
+
+    doc.setFontSize(16);
+    doc.text(`Search Results for "${query}"`, 10, 10);
+
+    const lines = results.map((tech: any, index: number) => {
+      return `${index + 1}. Title: ${tech.title}\n   Description: ${tech.description}\n   Category: ${tech.category || 'N/A'}\n`;
+    });
+
+    const docText = lines.join('\n\n');
+
+    doc.setFontSize(12);
+    doc.text(doc.splitTextToSize(docText, 180), 10, 20);
+
+    doc.save('searchResults.pdf');
+  };
+
+  const handleSingleDownload = (tech:any)=> {
+    const doc = new jsPDF();
+
+    doc.setFontSize(16);
+    const lines= `Title: ${tech.title}\n   Description: ${tech.description}\n   Category: ${tech.category} `;
+    doc.setFontSize(12);
+    doc.text(doc.splitTextToSize(lines, 180), 10, 20);
+    doc.save('Result.pdf');
+  }
+
 
   return (
     <div className="min-h-screen w-full bg-[#EAF0F7] flex items-center justify-center p-6">
@@ -197,7 +226,6 @@ export default function Home() {
 
 
          {/* Illustration */}
-         
         {tagSet&&(!query || results.length===0 &&! isLoading || query.trim().length < 2 || /[^a-zA-Z0-9\s]/.test(query)) && (
           <div className="flex justify-center items-center h-full mt-6">
             <Image
@@ -247,16 +275,24 @@ export default function Home() {
                     rel="noopener noreferrer"
                     className="flex items-center gap-4"
                   >
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center justify-between gap-4">
                       <img src={tech.image} alt={tech.title} className="w-12 h-12 rounded" />
-                      <div>
+                      <div className=''>
                         <h3 className="font-semibold">{tech.title}</h3>
-                        <p className="text-sm text-gray-500">{tech.description}</p>
+                        <p className="text-sm text-gray-500 max-w-90">{tech.description}</p>
+                      </div>
+                      <div className='absolute right-100'>
+                        <button onClick={() => handleSingleDownload(tech)}>
+                        <ArrowDownTrayIcon className="w-5 h-5 text-gray-500" />
+                        </button>
                       </div>
                     </div>
                   </a>
                 </div>
               ))}
+              <button onClick={handleDownload}>
+              <p className="text-purple-600">Download All Results PDF</p>
+              </button>
             </div>
           ) : (
             <div className="flex justify-center items-center h-full mt-6">
