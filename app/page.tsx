@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useCallback, useMemo, useRef } from 'react';
-import { useQuery, QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { debounce } from 'lodash';
-import { TECHNOLOGIES } from './lib/data';
 import { searchTechnologies } from './lib/api';
+import { useSearchHistory } from './lib/hook';
 import Image from 'next/image';
 import { MagnifyingGlassIcon, TagIcon } from '@heroicons/react/24/solid';
 
@@ -19,6 +19,9 @@ export default function Home() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const tagRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const [searchInput, setSearchInput]=useState<boolean | false>(false);
+  const { searchHistory, addToSearchHistory } = useSearchHistory();
+  const [showHistoryDropdown, setShowHistoryDropdown] = useState(false);
+
 
 
   const {
@@ -42,27 +45,49 @@ export default function Home() {
     []
   );
 
+  useEffect(() => {
+    if (
+      query.trim().length >= 2 &&
+      query.length <= 100 &&
+      !/[^a-zA-Z0-9\s]/.test(query)
+    ) {
+      debouncedSetQuery(query);
+    }
+  }, [query, selectedTag]);
+
+  useEffect(() => {
+    if (
+      query.trim().length >= 2 &&
+      query.length <= 100 &&
+      !/[^a-zA-Z0-9\s]/.test(query) &&
+      results.length > 0
+    ) {
+      addToSearchHistory(query);
+    }
+  }, [results]);
+
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
+    setQuery(value);
+    setShowHistoryDropdown(true);
+    
     if (value.length > 100 || /[^a-zA-Z0-9\s]/.test(value)) {
       setSearchInput(false);
       return;
     }
-    else if(value.length<2)
-    {
+    
+    if (value.length < 2) {
       setSearchInput(false);
-    }
-    else if(value.length<100&&value.length>1)
-    {
+    } else {
       setSearchInput(true);
     }
+
     debouncedSetQuery(value);
   }, [debouncedSetQuery]);
 
   const handleTagChange = useCallback((val: string) => {
     const value = val.trim();
     if (value.length > 100 || /[^a-zA-Z0-9\s]/.test(value)) return;
-    //setSelectedTag(value); 
     debouncedSetQuery(value); 
   }, [debouncedSetQuery]);
 
@@ -77,6 +102,27 @@ export default function Home() {
       setTagSet(true);
       handleTagChange(tag);
     }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      if (
+        query.trim().length >= 2 &&
+        query.length <= 100 &&
+        !/[^a-zA-Z0-9\s]/.test(query)
+      ) {
+        addToSearchHistory(query);
+        setShowHistoryDropdown(false);
+        searchInputRef.current?.blur();
+      }
+    }
+  };
+
+  const handleHistoryClick = (item: string) => {
+    setQuery(item);
+    addToSearchHistory(item);
+    setShowHistoryDropdown(false);
+    searchInputRef.current?.blur();
   };
 
   return (
@@ -95,17 +141,32 @@ export default function Home() {
               <input
                 ref={searchInputRef}
                 type="text"
+                value={query}
                 placeholder="Search what technologies we are using at..."
                 className="flex-1 bg-transparent outline-none text-gray-800 placeholder-gray-500"
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
+                onFocus={() => { setIsFocused(true); setShowHistoryDropdown(true); }}
+                onBlur={() => { setTimeout(() => setShowHistoryDropdown(false), 150); setIsFocused(false); }}
                 onChange={handleInputChange}
-                //onKeyDown={handleKeyDown}
+                onKeyDown={handleKeyDown}
               />
             </>
           ) : (
             <div className="flex flex-wrap gap-2">{selectedTag}</div>
           )}
+          {showHistoryDropdown && searchHistory.length > 0 && (
+          <div className="absolute top-30 left-170 mt-1 bg-white shadow-md rounded-lg border border-gray-200 z-20 max-h-52 max-w-50 overflow-y-auto w-[calc(100%-3rem)]">
+            {searchHistory.map((item, idx) => (
+              <button
+                key={`${item}-${idx}`}
+                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-violet-100 transition rounded-none"
+                onMouseDown={() => handleHistoryClick(item)}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+        )}
+
         </div>
 
         {/* Tags */}
@@ -113,7 +174,6 @@ export default function Home() {
           {TAGS.map((tag, i) => {
             const isSelected = selectedTag === tag;
             const isFocused = focusedTagIndex === i;
-            //setTagSet(!(selectedTag === tag));
             return (
               <button
                 key={tag}
@@ -225,7 +285,6 @@ export default function Home() {
             )}
           </div>
         </div>
-
       </div>
     </div>
   );
